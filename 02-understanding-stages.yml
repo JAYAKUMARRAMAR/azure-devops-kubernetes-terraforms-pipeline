@@ -45,6 +45,7 @@ stages:
     steps:
     - bash: echo Build SecondJob
 - stage: DevDeploy
+  dependsOn: Build
   jobs:
   - job: DevDeployJob
     steps:
@@ -52,15 +53,15 @@ stages:
 - stage: QADeploy
   # variables:
   #   environment: QA
-  # dependsOn: Build
+  dependsOn: Build
   jobs:
   - job: QADeployJob
     steps:
     - bash: echo QADeployJob
 - stage: ProdDeploy
-  # dependsOn: 
-  # - DevDeploy
-  # - QADeploy
+  dependsOn: 
+  - DevDeploy
+  - QADeploy
   jobs:
   - job: ProdDeployJob
     steps:
