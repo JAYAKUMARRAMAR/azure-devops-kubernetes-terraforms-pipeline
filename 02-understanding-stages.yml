@@ -15,7 +15,7 @@ stages:
   - job: FirstJob
     steps:
     - bash: echo Build FirstJob
-    # - bash: echo $(PipelineLevelVariable)
+    - bash: echo $(PipelineLevelVariable)
     # - bash: echo $(Build.BuildNumber)
     # - bash: echo $(Build.BuildId)
     # - bash: echo $(Build.SourceBranchName)
@@ -45,19 +45,21 @@ stages:
     steps:
     - bash: echo Build SecondJob
 - stage: DevDeploy
+  variables:
+    environment : Dev
   dependsOn: Build
   jobs:
   - job: DevDeployJob
     steps:
-    - bash: echo DevDeployJob
+    - bash: echo $(environment)DeployJob
 - stage: QADeploy
-  # variables:
-  #   environment: QA
+  variables:
+    environment: Dev
   dependsOn: Build
   jobs:
   - job: QADeployJob
     steps:
-    - bash: echo QADeployJob
+    - bash: echo $(environment)DeployJob
 - stage: ProdDeploy
   dependsOn: 
   - DevDeploy
