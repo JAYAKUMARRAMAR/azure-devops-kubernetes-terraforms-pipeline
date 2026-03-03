@@ -48,7 +48,7 @@ provider "kubernetes" {
 module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "~> 19.0"
-  cluster_name    = "in28minutes-cluster-1"
+  cluster_name    = "in28minutes-cluster"
   cluster_version = "1.29"
   create_kms_key               = true
   create_cloudwatch_log_group  = false
@@ -56,6 +56,7 @@ module "in28minutes-cluster" {
     resources        = ["secrets"]
     provider_key_arn = null
   }
+  create_aws_auth_configmap = false
   manage_aws_auth_configmap = false
   vpc_id          = aws_default_vpc.default.id
   subnet_ids      = data.aws_subnets.subnets.ids
