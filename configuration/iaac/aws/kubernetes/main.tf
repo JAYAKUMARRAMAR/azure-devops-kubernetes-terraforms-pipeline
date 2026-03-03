@@ -35,20 +35,10 @@ data "aws_subnets" "subnets" {
   }
 }
 
-data "aws_eks_cluster" "in28minutes" {
-  name       = module.in28minutes-cluster.cluster_name
-  depends_on = [module.in28minutes-cluster]
-}
-
-data "aws_eks_cluster_auth" "in28minutes" {
-  name       = module.in28minutes-cluster.cluster_name
-  depends_on = [module.in28minutes-cluster]
-}
-
 provider "kubernetes" {
-  host                   = data.aws_eks_cluster.in28minutes.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.in28minutes.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.in28minutes.token
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
 module "in28minutes-cluster" {
@@ -56,9 +46,6 @@ module "in28minutes-cluster" {
   version         = "~> 20.0"
   cluster_name    = "in28minutes-cluster"
   cluster_version = "1.29"
-  create_kms_key               = false
-  create_cloudwatch_log_group  = false
-  cluster_encryption_config    = []
   enable_cluster_creator_admin_permissions = true
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = false
@@ -78,12 +65,21 @@ module "in28minutes-cluster" {
   }
 }
 
+data "aws_eks_cluster" "cluster" {
+  name       = "in28minutes-cluster"
+  depends_on = [module.in28minutes-cluster]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name       = "in28minutes-cluster"
+  depends_on = [module.in28minutes-cluster]
+}
+
 
 # We will use ServiceAccount to connect to K8S Cluster in CI/CD mode
 # ServiceAccount needs permissions to create deployments 
 # and services in default namespace
 resource "kubernetes_cluster_role_binding" "example" {
-  depends_on = [module.in28minutes-cluster]
   metadata {
     name = "fabric8-rbac"
   }
