@@ -6,21 +6,21 @@
 
 
 terraform {
-  backend "s3" {
-    bucket = "mybucket" # Will be overridden from build
-    key    = "path/to/my/key" # Will be overridden from build
-    region = "us-east-1"
-  }
-
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 4.0, < 6.0"
+      version = "~> 5.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.12"
     }
+  }
+
+  backend "s3" {
+    bucket = "mybucket" # Will be overridden from build
+    key    = "path/to/my/key" # Will be overridden from build
+    region = "us-east-1"
   }
 }
 
@@ -33,48 +33,46 @@ data "aws_subnets" "subnets" {
     name   = "vpc-id"
     values = [aws_default_vpc.default.id]
   }
-  filter {
-    name   = "availability-zone"
-    values = ["us-east-1a", "us-east-1b", "us-east-1c", "us-east-1d", "us-east-1f"]
-  }
 }
 
 provider "kubernetes" {
-  host                   = module.in28minutes-cluster.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.in28minutes-cluster.cluster_certificate_authority_data)
-
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.in28minutes-cluster.cluster_name]
-  }
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
 module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
-  version         = "~> 19.0"
+  version         = "~> 20.0"
   cluster_name    = "in28minutes-cluster"
   cluster_version = "1.29"
-  create_kms_key               = false
-  create_cloudwatch_log_group  = false
-  cluster_encryption_config    = []
-  create_aws_auth_configmap = false
-  manage_aws_auth_configmap = false
-  aws_auth_roles            = []
-  aws_auth_users            = []
-  aws_auth_accounts         = []
+  enable_cluster_creator_admin_permissions = true
+  cluster_endpoint_public_access  = true
+  cluster_endpoint_private_access = false
+  subnet_ids      = ["subnet-05e5cd99035c324fc", "subnet-0f0e2ca6e9ab6b120"] #CHANGE
+  #subnet_ids = data.aws_subnets.subnets.ids
   vpc_id          = aws_default_vpc.default.id
-  subnet_ids      = data.aws_subnets.subnets.ids
+
   #vpc_id         = "vpc-1234556abcdef"
 
   eks_managed_node_groups = {
     default = {
-      instance_types  = ["t2.micro"]
-      max_capacity    = 5
-      desired_capacity = 3
-      min_capacity    = 3
+      instance_types = ["t3.micro"]
+      max_size       = 5
+      desired_size   = 3
+      min_size       = 3
     }
   }
+}
+
+data "aws_eks_cluster" "cluster" {
+  name       = "in28minutes-cluster"
+  depends_on = [module.in28minutes-cluster]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name       = "in28minutes-cluster"
+  depends_on = [module.in28minutes-cluster]
 }
 
 
@@ -82,7 +80,6 @@ module "in28minutes-cluster" {
 # ServiceAccount needs permissions to create deployments 
 # and services in default namespace
 resource "kubernetes_cluster_role_binding" "example" {
-  depends_on = [module.in28minutes-cluster]
   metadata {
     name = "fabric8-rbac"
   }
