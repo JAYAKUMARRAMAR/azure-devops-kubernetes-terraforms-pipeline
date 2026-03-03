@@ -11,6 +11,13 @@ terraform {
     key    = "path/to/my/key" # Will be overridden from build
     region = "us-east-1"
   }
+
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.12"
+    }
+  }
 }
 
 resource "aws_default_vpc" "default" {
@@ -25,14 +32,14 @@ provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
   cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-  version                = "~> 2.12"
-}
+}    
 
 module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
+  version         = "~> 19.0"
   cluster_name    = "in28minutes-cluster"
   cluster_version = "1.14"
-  subnets         = ["subnet-3f7b2563", "subnet-4a7d6a45"] #CHANGE
+  subnets         = ["subnet-05e5cd99035c324fc", "subnet-0f0e2ca6e9ab6b120"] #CHANGE
   #subnets = data.aws_subnet_ids.subnets.ids
   vpc_id          = aws_default_vpc.default.id
 
