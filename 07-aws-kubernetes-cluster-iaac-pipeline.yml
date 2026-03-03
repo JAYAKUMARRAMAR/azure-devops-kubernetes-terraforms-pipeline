@@ -13,6 +13,11 @@ steps:
 - script: echo Hello, world!
   displayName: 'Run a one-line script'
 
+- task: ms-devlabs.custom-terraform-tasks.custom-terraform-installer-task.TerraformInstaller@1
+  displayName: 'Install Terraform'
+  inputs:
+    terraformVersion: '1.6.6'
+
 # init - backend
 # apply
 - task: TerraformTask@5
