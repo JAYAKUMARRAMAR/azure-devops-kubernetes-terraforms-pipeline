@@ -56,6 +56,7 @@ module "in28minutes-cluster" {
     resources        = ["secrets"]
     provider_key_arn = null
   }
+  manage_aws_auth_configmap = false
   vpc_id          = aws_default_vpc.default.id
   subnet_ids      = data.aws_subnets.subnets.ids
   #vpc_id         = "vpc-1234556abcdef"
