@@ -45,7 +45,7 @@ module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "~> 19.0"
   cluster_name    = "in28minutes-cluster-1"
-  cluster_version = "1.14"
+  cluster_version = "1.29"
   create_kms_key               = true
   create_cloudwatch_log_group  = false
   cluster_encryption_config = {
