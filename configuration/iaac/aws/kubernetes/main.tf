@@ -44,7 +44,7 @@ provider "kubernetes" {
 module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "~> 20.0"
-  cluster_name    = "in28minutes-cluster"
+  cluster_name    = "jaya-cluster"
   cluster_version = "1.29"
   create_kms_key               = false
   create_cloudwatch_log_group  = false
