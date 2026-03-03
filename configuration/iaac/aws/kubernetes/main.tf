@@ -28,8 +28,11 @@ resource "aws_default_vpc" "default" {
 
 }
 
-data "aws_subnet_ids" "subnets" {
-  vpc_id = aws_default_vpc.default.id
+data "aws_subnets" "subnets" {
+  filter {
+    name   = "vpc-id"
+    values = [aws_default_vpc.default.id]
+  }
 }
 
 provider "kubernetes" {
@@ -43,7 +46,7 @@ module "in28minutes-cluster" {
   version         = "~> 19.0"
   cluster_name    = "in28minutes-cluster"
   cluster_version = "1.14"
-  #subnet_ids = data.aws_subnet_ids.subnets.ids
+  #subnet_ids = data.aws_subnets.subnets.ids
   vpc_id          = aws_default_vpc.default.id
   subnet_ids      = ["subnet-05e5cd99035c324fc", "subnet-0f0e2ca6e9ab6b120"] #CHANGE
   #vpc_id         = "vpc-1234556abcdef"
