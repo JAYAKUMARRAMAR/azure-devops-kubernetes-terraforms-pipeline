@@ -33,6 +33,10 @@ data "aws_subnets" "subnets" {
     name   = "vpc-id"
     values = [aws_default_vpc.default.id]
   }
+  filter {
+    name   = "availability-zone"
+    values = ["us-east-1a", "us-east-1b", "us-east-1c", "us-east-1d", "us-east-1f"]
+  }
 }
 
 provider "kubernetes" {
@@ -52,8 +56,7 @@ module "in28minutes-cluster" {
   enable_cluster_creator_admin_permissions = true
   cluster_endpoint_public_access  = true
   cluster_endpoint_private_access = false
-  subnet_ids      = ["subnet-05e5cd99035c324fc", "subnet-0f0e2ca6e9ab6b120"] #CHANGE
-  #subnet_ids = data.aws_subnets.subnets.ids
+  subnet_ids      = data.aws_subnets.subnets.ids
   vpc_id          = aws_default_vpc.default.id
 
   #vpc_id         = "vpc-1234556abcdef"
@@ -69,12 +72,12 @@ module "in28minutes-cluster" {
 }
 
 data "aws_eks_cluster" "cluster" {
-  name       = "in28minutes-cluster"
+  name       = "jaya-cluster"
   depends_on = [module.in28minutes-cluster]
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name       = "in28minutes-cluster"
+  name       = "jaya-cluster"
   depends_on = [module.in28minutes-cluster]
 }
 
