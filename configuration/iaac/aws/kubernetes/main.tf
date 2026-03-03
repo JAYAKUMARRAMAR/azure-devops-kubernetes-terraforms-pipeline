@@ -35,15 +35,20 @@ data "aws_subnets" "subnets" {
   }
 }
 
-provider "kubernetes" {
-  host                   = module.in28minutes-cluster.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.in28minutes-cluster.cluster_certificate_authority_data)
+data "aws_eks_cluster" "in28minutes" {
+  name       = module.in28minutes-cluster.cluster_name
+  depends_on = [module.in28minutes-cluster]
+}
 
-  exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
-    command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", module.in28minutes-cluster.cluster_name]
-  }
+data "aws_eks_cluster_auth" "in28minutes" {
+  name       = module.in28minutes-cluster.cluster_name
+  depends_on = [module.in28minutes-cluster]
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.in28minutes.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.in28minutes.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.in28minutes.token
 }
 
 module "in28minutes-cluster" {
