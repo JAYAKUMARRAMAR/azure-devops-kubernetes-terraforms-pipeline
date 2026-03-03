@@ -46,8 +46,12 @@ module "in28minutes-cluster" {
   version         = "~> 19.0"
   cluster_name    = "in28minutes-cluster-1"
   cluster_version = "1.14"
-  create_kms_key               = false
+  create_kms_key               = true
   create_cloudwatch_log_group  = false
+  cluster_encryption_config = {
+    resources        = ["secrets"]
+    provider_key_arn = null
+  }
   #subnet_ids = data.aws_subnets.subnets.ids
   vpc_id          = aws_default_vpc.default.id
   subnet_ids      = ["subnet-05e5cd99035c324fc", "subnet-0f0e2ca6e9ab6b120"] #CHANGE
