@@ -39,11 +39,16 @@ data "aws_subnets" "subnets" {
   }
 }
 
+data "aws_eks_cluster" "cluster" {
+  name       = module.in28minutes-cluster.cluster_name
+  depends_on = [module.in28minutes-cluster]
+}
+
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster.token
-}    
+}
 
 module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
@@ -58,6 +63,9 @@ module "in28minutes-cluster" {
   }
   create_aws_auth_configmap = false
   manage_aws_auth_configmap = false
+  aws_auth_roles            = []
+  aws_auth_users            = []
+  aws_auth_accounts         = []
   vpc_id          = aws_default_vpc.default.id
   subnet_ids      = data.aws_subnets.subnets.ids
   #vpc_id         = "vpc-1234556abcdef"
@@ -70,11 +78,6 @@ module "in28minutes-cluster" {
       min_capacity    = 3
     }
   }
-}
-
-data "aws_eks_cluster" "cluster" {
-  name       = module.in28minutes-cluster.cluster_name
-  depends_on = [module.in28minutes-cluster]
 }
 
 data "aws_eks_cluster_auth" "cluster" {
