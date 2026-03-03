@@ -57,6 +57,7 @@ module "in28minutes-cluster" {
   cluster_version = "1.29"
   create_kms_key               = false
   create_cloudwatch_log_group  = false
+  cluster_encryption_config    = []
   create_aws_auth_configmap = false
   manage_aws_auth_configmap = false
   aws_auth_roles            = []
