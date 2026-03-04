@@ -34,9 +34,14 @@ data "aws_subnets" "subnets" {
   }
 }
 
+data "aws_eks_cluster" "cluster" {
+  name       = module.in28minutes-cluster.cluster_name
+  depends_on = [module.in28minutes-cluster]
+}
+
 provider "kubernetes" {
-  host                   = module.in28minutes-cluster.cluster_endpoint
-  cluster_ca_certificate = base64decode(module.in28minutes-cluster.cluster_certificate_authority_data)
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.cluster.token
 }
 
@@ -77,7 +82,7 @@ data "aws_eks_cluster_auth" "cluster" {
 # and services in default namespace
 resource "kubernetes_cluster_role_binding" "example" {
   metadata {
-    name = "fabric8-rbac"
+    name = "fabric8-rbac-auth"
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
