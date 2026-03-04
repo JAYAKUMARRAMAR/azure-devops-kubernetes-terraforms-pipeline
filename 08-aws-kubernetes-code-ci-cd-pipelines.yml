@@ -59,6 +59,14 @@ stages:
         artifactName: 'manifests'
         itemPattern: '**/*.yaml'
         targetPath: '$(System.ArtifactsDirectory)'
+    # - task: KubernetesManifest@1
+    #   inputs:
+    #     action: 'deploy'
+    #     connectionType: 'kubernetesServiceConnection'
+    #     kubernetesServiceConnection: 'aws-kubernetes-cluster-service-connection'
+    #     namespace: 'default'
+    #     manifests: '$(System.ArtifactsDirectory)/configuration/kubernetes/deployment.yaml'
+    #     containers: jayakumarramar/currency-exchange-devops:$(tag)
     - task: KubernetesManifest@1
       inputs:
         action: 'deploy'
