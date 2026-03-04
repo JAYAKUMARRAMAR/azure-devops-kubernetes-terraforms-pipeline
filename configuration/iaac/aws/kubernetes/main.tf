@@ -2,7 +2,6 @@
 # aws eks --region us-east-1 update-kubeconfig --name in28minutes-cluster
 # Uses default VPC and Subnet. Create Your Own VPC and Private Subnets for Prod Usage.
 # terraform-backend-state-in28minutes-123
-# AKIA4AHVNOD7OOO6T4KI
 
 
 terraform {
@@ -24,14 +23,14 @@ terraform {
   }
 }
 
-resource "aws_default_vpc" "default" {
-
+data "aws_vpc" "default" {
+  default = true
 }
 
 data "aws_subnets" "subnets" {
   filter {
     name   = "vpc-id"
-    values = [aws_default_vpc.default.id]
+    values = [data.aws_vpc.default.id]
   }
 }
 
@@ -44,29 +43,31 @@ provider "kubernetes" {
 module "in28minutes-cluster" {
   source          = "terraform-aws-modules/eks/aws"
   version         = "~> 20.0"
-  cluster_name    = "in28minutes-cluster"
-  cluster_version = "1.29"
-  enable_cluster_creator_admin_permissions = true
-  cluster_endpoint_public_access  = true
-  cluster_endpoint_private_access = false
-  subnet_ids      = ["subnet-05e5cd99035c324fc", "subnet-0f0e2ca6e9ab6b120"] #CHANGE
-  #subnet_ids = data.aws_subnets.subnets.ids
-  vpc_id          = aws_default_vpc.default.id
+  cluster_name    = var.cluster_name
+  cluster_version = var.cluster_version
+  enable_cluster_creator_admin_permissions = var.enable_cluster_creator_admin_permissions
+  cluster_endpoint_public_access  = var.cluster_endpoint_public_access
+  cluster_endpoint_private_access = var.cluster_endpoint_private_access
+  cluster_enabled_log_types       = var.cluster_log_types
+  subnet_ids      = data.aws_subnets.subnets.ids
+  vpc_id          = data.aws_vpc.default.id
 
   #vpc_id         = "vpc-1234556abcdef"
 
   eks_managed_node_groups = {
     default = {
-      instance_types = ["t3.micro"]
-      max_size       = 5
-      desired_size   = 3
-      min_size       = 3
+      instance_types = var.node_instance_types
+      max_size       = var.node_max_size
+      desired_size   = var.node_desired_size
+      min_size       = var.node_min_size
     }
   }
+
+  tags = var.tags
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name       = "in28minutes-cluster"
+  name       = module.in28minutes-cluster.cluster_name
   depends_on = [module.in28minutes-cluster]
 }
 
@@ -92,5 +93,5 @@ resource "kubernetes_cluster_role_binding" "example" {
 
 # Needed to set the default region
 provider "aws" {
-  region  = "us-east-1"
+  region  = var.aws_region
 }
